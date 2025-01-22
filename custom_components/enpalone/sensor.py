@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_registry import async_get, async_entries_for_config_entry
-from custom_components.enpal.const import DOMAIN
+from custom_components.enpalone.const import DOMAIN
 import aiohttp
 import logging
 from influxdb_client import InfluxDBClient
