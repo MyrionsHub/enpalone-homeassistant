@@ -55,7 +55,7 @@ async def async_setup_entry(
     global_config = hass.data[DOMAIN]
 
     def addSensor(icon:str, name: str, device_class: str, unit: str):
-        to_add.append(EnpalSensor(field, measurement, icon, name, config['enpal_host_ip'], config['enpal_host_port'], config['enpal_token'], device_class, unit))
+        to_add.append(EnpalSensor(field, measurement, icon, name, config['enpal_host_ip'], config['enpal_host_port'], config['enpal_token'], sensortype, unit))
 
     tables = await hass.async_add_executor_job(get_tables, config['enpal_host_ip'], config['enpal_host_port'], config['enpal_token'])
 
@@ -64,60 +64,54 @@ async def async_setup_entry(
         field = table.records[0].values['_field']
         measurement = table.records[0].values['_measurement']
         unit = table.records[0].values['unit']
+        sensortype = ""
+
+        if unit == "W":
+            sensortype = "power"
+        elif unit == "kWh":
+            sensortype = "energy"
+        elif unit == "Wh":
+            sensortype = "energy"
+        elif unit == "A":
+            sensortype = "current"
+        elif unit == "V":
+            sensortype = "voltage"
+        elif unit == "Percent":
+            sensortype = "battery"
+            unit = "%"
+        elif unit == "Celcius":
+            sensortype = "temperature"
+            unit = "°C"
+        elif unit == "Hz":
+            sensortype = "freqency"
+        else:
+            sensortype = "none"
+            unit = ""
+        
 
         if measurement == "inverter":
-            if field == "Current.Battery": addSensor('mdi:lightning-bolt', 'Enpal One - Battery Current', 'current', 'A')
-            elif field == "Current.String.1": addSensor('mdi:lightning-bolt', 'Enpal One - String 1 Current', 'current', 'A')
-            elif field == "Current.String.2": addSensor('mdi:lightning-bolt', 'Enpal One - String 2 Current', 'current', 'A')
-            elif field == "Temperature.Battery": addSensor('mdi:home-thermometer-outline', 'Enpal One - Battery Temperature', 'temperature', '°C')
-            elif field == "Frequency.Grid": addSensor('mdi:solar-power-variant', 'Enpal One - Grid Frequency', 'frequency', 'Hz')
-            elif field == "Inverter.System.State": addSensor('mdi:test-tube-empty', 'Enpal One - Inverter State', 'none', 'none')
-            elif field == "State.ErrorCodes.1": addSensor('mdi:test-tube-empty', 'Enpal One - Error Code 1', 'none', 'none')
-            elif field == "State.ErrorCodes.10": addSensor('mdi:test-tube-empty', 'Enpal One - Error Code 10', 'none', 'none')
-            elif field == "State.ErrorCodes.11": addSensor('mdi:test-tube-empty', 'Enpal One - Error Code 11', 'none', 'none')
-            elif field == "State.ErrorCodes.2": addSensor('mdi:test-tube-empty', 'Enpal One - Error Code 2', 'none', 'none')
-            elif field == "State.ErrorCodes.6": addSensor('mdi:test-tube-empty', 'Enpal One - Error Code 6', 'none', 'none')
-            elif field == "State.ErrorCodes.9": addSensor('mdi:test-tube-empty', 'Enpal One - Error Code 9', 'none', 'none')
-            elif field == "Battery.ChargeLevel.Max": addSensor('mdi:test-tube-empty', 'Enpal One - Battery Maximum Level', 'battery', '%')
-            elif field == "Battery.ChargeLevel.Min": addSensor('mdi:test-tube-empty', 'Enpal One - Battery Minimum Level', 'battery', '%')
-            elif field == "Battery.ChargeLevel.MinOnGrid": addSensor('mdi:test-tube-empty', 'Enpal One - Battery Minimum Level On Grid', 'battery', '%')
-            elif field == "Battery.SOH": addSensor('mdi:test-tube-empty', 'Enpal One - Battery State Of Health', 'battery', '%')
-            elif field == "Energy.Battery.Charge.Level.Absolute": addSensor('mdi:test-tube-empty', 'Enpal One - Battery Absolute Level', 'battery', '%')
-            elif field == "Voltage.Battery": addSensor('mdi:test-tube-empty', 'Enpal One - Battery Voltage', 'voltage', 'V')
-            elif field == "Voltage.Phase.A": addSensor('mdi:lightning-bolt', 'Enpal One - Phase A Voltage', 'voltage', 'V')
-            elif field == "Voltage.Phase.B": addSensor('mdi:lightning-bolt', 'Enpal One - Phase B Voltage', 'voltage', 'V')
-            elif field == "Voltage.Phase.C": addSensor('mdi:lightning-bolt', 'Enpal One - Phase C Voltage', 'voltage', 'V')
-            elif field == "Voltage.String.1": addSensor('mdi:lightning-bolt', 'Enpal One - String 1 Voltage', 'voltage', 'V')
-            elif field == "Voltage.String.2": addSensor('mdi:lightning-bolt', 'Enpal One - String 2 Voltage', 'voltage', 'V')
-            elif field == "Power.AC.Phase.A": addSensor('mdi:lightning-bolt', 'Enpal One - Phase A Power', 'power', 'W')
-            elif field == "Power.AC.Phase.B": addSensor('mdi:lightning-bolt', 'Enpal One - Phase B Power', 'power', 'W')
-            elif field == "Power.AC.Phase.C": addSensor('mdi:lightning-bolt', 'Enpal One - Phase C Power', 'power', 'W')
-            elif field == "Power.DC.String.1": addSensor('mdi:lightning-bolt', 'Enpal One - String 1 Power', 'power', 'W')
-            elif field == "Power.DC.String.2": addSensor('mdi:lightning-bolt', 'Enpal One - String 2 Power', 'power', 'W') 
+            if field == "Power.DC.Total": addSensor('mdi:solar-power', 'Enpal One - Solar - Production Power')
+            elif field == "Power.House.Total": addSensor('mdi:home-lightning-bolt', 'Enpal One - Solar - Power House Total')
+            elif field == "Energy.Production.Total.Day": addSensor('mdi:solar-power-variant', 'Enpal One - Solar - Production Day')
             else:
-                _LOGGER.debug(f"Not adding measurement: {measurement} field: {field}")
+                addSensor('mdi:solar-power', 'Enpal One - Solar -' + field, sensortype, unit) 
 
-        elif measurement == "system":
-            if field == "Percent.Storage.Level": addSensor('mdi:battery', 'Enpal One - Battery Level', 'battery', '%')
-            elif field == "Power.Consumption.Total": addSensor('mdi:home-lightning-bolt', 'Enpal One - Power Consumption ', 'power', 'W')
-            elif field == "Power.External.Total": addSensor('mdi:home-lightning-bolt', 'Enpal One - Outbound Power', 'power', 'W')
-            elif field == "Power.Production.Total": addSensor('mdi:solar-power', 'Enpal One - Power Production', 'power', 'W')
-            elif field == "Power.Storage.Total": addSensor('mdi:battery-charging', 'Enpal One - Battery Power Charging', 'power', 'W')
-            elif field == "Energy.Storage.Level": addSensor('mdi:test-tube-empty', 'Enpal One - Battery Energy Level', 'energy', 'Wh')
-            elif field == "Energy.Consumption.Total.Day": addSensor('mdi:home-lightning-bolt', 'Enpal One - Total Energy Consumption', 'energy', 'kWh')
-            elif field == "Energy.External.Total.In.Day": addSensor('mdi:transmission-tower-import', 'Enpal One - Total Energy In', 'energy', 'kWh')
-            elif field == "Energy.External.Total.Out.Day": addSensor('mdi:transmission-tower-export', 'Enpal One - Total Energy Out ', 'energy', 'kWh')
-            elif field == "Energy.Production.Total.Day": addSensor('mdi:solar-power-variant', 'Enpal One - Total Energy Production', 'energy', 'kWh')
-            elif field == "Energy.Storage.Total.In.Day": addSensor('mdi:battery-arrow-up', 'Enpal One - Total Battery Charge', 'energy', 'kWh')
-            elif field == "Energy.Storage.Total.Out.Day": addSensor('mdi:battery-arrow-down', 'Enpal One - Total Battery Discharge', 'energy', 'kWh')
+        elif measurement == "battery":
+            if field == "Power.Battery.Charge.Discharge": addSensor('mdi:battery-charging', 'Enpal One - Battery - Power')
+            elif field == "Energy.Battery.Charge.Level": addSensor('mdi:battery', 'Enpal One - Battery - Percent')
+            elif field == "Energy.Battery.Charge.Day": addSensor('mdi:battery-arrow-up', 'Enpal One - Battery - Charge Day')
+            elif field == "Energy.Battery.Discharge.Day": addSensor('mdi:battery-arrow-down', 'Enpal One - Battery - Discharge Day')
             else:
-                _LOGGER.debug(f"Not adding measurement: {measurement} field: {field}")
+                addSensor('mdi:battery', 'Enpal One - Battery -' + field, sensortype, unit) 
+
+        elif measurement == "powerSensor":
+            addSensor('mdi:lightning-bolt', 'Enpal One - Power Grid -' + field, sensortype, unit) 
+                
+        elif measurement == "system":
+            addSensor('mdi:battery', 'Enpal One - System -' + field, sensortype, unit) 
 
         elif measurement == "iot":
-            if field == "Cpu.Load": addSensor('mdi:test-tube-empty', 'Enpal One - CPU Load', 'percent', '%')
-            elif field == "Memory.Usage": addSensor('mdi:test-tube-empty', 'Enpal One - Memory Usage', 'percent', '%')
-            else:
-                _LOGGER.debug(f"Not adding measurement: {measurement} field: {field}")
+            addSensor('mdi:test-tube-empty', 'Enpal One - IoT -' + field, sensortype, unit) 
 
         else:
             _LOGGER.debug(f"Measurement type not recognized: {measurement}")
@@ -169,7 +163,7 @@ class EnpalSensor(SensorEntity):
 
             self._attr_native_value = round(float(value), 2)
             self._attr_device_class = self.enpal_device_class
-            self._attr_native_unit_of_measurement	= self.unit
+            self._attr_native_unit_of_measurement = self.unit
             self._attr_state_class = 'measurement'
             self._attr_extra_state_attributes['last_check'] = datetime.now()
             self._attr_extra_state_attributes['field'] = self.field
