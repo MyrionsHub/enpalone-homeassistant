@@ -54,7 +54,7 @@ async def async_setup_entry(
 
     global_config = hass.data[DOMAIN]
 
-    def addSensor(icon:str, name: str, device_class: str, unit: str):
+    def addSensor(icon:str, name: str):
         to_add.append(EnpalSensor(field, measurement, icon, name, config['enpal_host_ip'], config['enpal_host_port'], config['enpal_token'], sensortype, unit))
 
     tables = await hass.async_add_executor_job(get_tables, config['enpal_host_ip'], config['enpal_host_port'], config['enpal_token'])
@@ -94,7 +94,7 @@ async def async_setup_entry(
             elif field == "Power.House.Total": addSensor('mdi:home-lightning-bolt', 'Enpal One - Solar - Power House Total')
             elif field == "Energy.Production.Total.Day": addSensor('mdi:solar-power-variant', 'Enpal One - Solar - Production Day')
             else:
-                addSensor('mdi:solar-power', 'Enpal One - Solar -' + field, sensortype, unit) 
+                addSensor('mdi:solar-power', 'Enpal One - Solar -' + field) 
 
         elif measurement == "battery":
             if field == "Power.Battery.Charge.Discharge": addSensor('mdi:battery-charging', 'Enpal One - Battery - Power')
@@ -102,16 +102,16 @@ async def async_setup_entry(
             elif field == "Energy.Battery.Charge.Day": addSensor('mdi:battery-arrow-up', 'Enpal One - Battery - Charge Day')
             elif field == "Energy.Battery.Discharge.Day": addSensor('mdi:battery-arrow-down', 'Enpal One - Battery - Discharge Day')
             else:
-                addSensor('mdi:battery', 'Enpal One - Battery -' + field, sensortype, unit) 
+                addSensor('mdi:battery', 'Enpal One - Battery -' + field) 
 
         elif measurement == "powerSensor":
-            addSensor('mdi:lightning-bolt', 'Enpal One - Power Grid -' + field, sensortype, unit) 
+            addSensor('mdi:lightning-bolt', 'Enpal One - Power Grid -' + field) 
                 
         elif measurement == "system":
-            addSensor('mdi:battery', 'Enpal One - System -' + field, sensortype, unit) 
+            addSensor('mdi:battery', 'Enpal One - System -' + field) 
 
         elif measurement == "iot":
-            addSensor('mdi:test-tube-empty', 'Enpal One - IoT -' + field, sensortype, unit) 
+            addSensor('mdi:test-tube-empty', 'Enpal One - IoT -' + field) 
 
         else:
             _LOGGER.debug(f"Measurement type not recognized: {measurement}")
